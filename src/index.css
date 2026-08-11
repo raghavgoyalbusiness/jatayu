@@ -1,0 +1,274 @@
+@import '@fontsource-variable/inter-tight';
+@import '@fontsource-variable/jetbrains-mono';
+@import 'tailwindcss';
+
+/* ---------------------------------------------------------------------------
+   Design tokens. Near-black ground, four steps of grey, one accent.
+   The accent is reserved for live/active data only — never decoration.
+   --------------------------------------------------------------------------- */
+@theme {
+  --color-ground: #08090a;
+  --color-g1: #101215; /* raised surface */
+  --color-g2: #1c2025; /* hairline / divider */
+  --color-g3: #4d545d; /* muted label */
+  --color-g4: #9aa1a9; /* body copy */
+  --color-g5: #dfe3e7; /* headings */
+  --color-accent: #ffb020; /* cold amber — live data only */
+
+  --font-sans: 'Inter Tight Variable', 'Inter Tight', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
+
+  --ease-inst: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+    --rail-w: 13rem;
+  }
+
+  html {
+    background-color: var(--color-ground);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--color-ground);
+    color: var(--color-g4);
+    font-family: var(--font-sans);
+    font-synthesis-weight: none;
+  }
+
+  /* Numerals, labels and telemetry are monospace and tabular everywhere. */
+  code,
+  kbd,
+  samp,
+  pre,
+  th,
+  td,
+  .mono {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  h1,
+  h2,
+  h3 {
+    color: var(--color-g5);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  ::selection {
+    background: var(--color-accent);
+    color: var(--color-ground);
+  }
+
+  :focus-visible {
+    outline: 1px solid var(--color-accent);
+    outline-offset: 3px;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+}
+
+@layer components {
+  /* Crosshair corner ticks. Panels are not cards — they are marked regions. */
+  .panel {
+    position: relative;
+    border: 1px solid var(--color-g2);
+  }
+
+  .panel::before,
+  .panel::after {
+    content: '';
+    position: absolute;
+    width: 9px;
+    height: 9px;
+    pointer-events: none;
+    border-color: var(--color-g3);
+    border-style: solid;
+  }
+
+  .panel::before {
+    top: -1px;
+    left: -1px;
+    border-width: 1px 0 0 1px;
+  }
+
+  .panel::after {
+    right: -1px;
+    bottom: -1px;
+    border-width: 0 1px 1px 0;
+  }
+
+  .tick-label {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    line-height: 1;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-g3);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .rule {
+    border: 0;
+    border-top: 1px solid var(--color-g2);
+  }
+
+  /* Live values. The only place the accent is allowed to appear as text. */
+  .live {
+    color: var(--color-accent);
+  }
+
+  /* Copy sitting over the canvas. Opaque enough to hold contrast, not so
+     opaque that the scene stops reading as a background. */
+  .scrim {
+    background-color: color-mix(in srgb, var(--color-ground) 88%, transparent);
+  }
+
+  /* --- 3D annotation callouts (portalled out of the canvas by drei) ------- */
+
+  .annotation-wrapper {
+    pointer-events: none !important;
+  }
+
+  .annotation {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    width: max-content;
+    max-width: 15rem;
+    padding-left: 0.5rem;
+    border-left: 1px solid var(--color-g2);
+    transform: translateY(-50%);
+    transition: opacity 220ms var(--ease-inst);
+  }
+
+  .annotation[data-side='left'] {
+    padding-right: 0.5rem;
+    padding-left: 0;
+    border-right: 1px solid var(--color-g2);
+    border-left: 0;
+    text-align: right;
+    transform: translate(-100%, -50%);
+  }
+
+  .annotation__label {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    line-height: 1.2;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-g5);
+    white-space: nowrap;
+  }
+
+  .annotation__value {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    line-height: 1.35;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-g4);
+  }
+
+  /* --- Cursor crosshair --------------------------------------------------- */
+
+  .crosshair {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 40;
+    pointer-events: none;
+    opacity: 0;
+    will-change: transform;
+    transition: opacity 200ms var(--ease-inst);
+  }
+
+  .crosshair__mark {
+    position: absolute;
+    top: -23px;
+    left: -23px;
+    fill: none;
+    stroke: var(--color-g4);
+    stroke-width: 1;
+    opacity: 0.75;
+  }
+
+  .crosshair__mark .crosshair__dot {
+    fill: var(--color-accent);
+    stroke: none;
+  }
+
+  .crosshair__readout {
+    position: absolute;
+    top: 14px;
+    left: 30px;
+    font-size: 0.625rem;
+    letter-spacing: 0.1em;
+    white-space: nowrap;
+    color: var(--color-g3);
+  }
+
+  /* --- Deployment chart --------------------------------------------------- */
+
+  .map-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    fill: var(--color-g4);
+  }
+
+  .map-pulse {
+    fill: none;
+    stroke: var(--color-accent);
+    stroke-width: 1;
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: map-ping 3.4s var(--ease-inst) infinite;
+  }
+}
+
+@keyframes map-ping {
+  0% {
+    r: 3;
+    opacity: 0.7;
+  }
+  70%,
+  100% {
+    r: 16;
+    opacity: 0;
+  }
+}
+
+@layer utilities {
+  .ease-inst {
+    transition-timing-function: var(--ease-inst);
+  }
+
+  .hide-cursor,
+  .hide-cursor * {
+    cursor: none;
+  }
+}
+
+/* Reduced motion: no transitions, no drift, no grain. Handled in JS as well —
+   this is the belt-and-braces pass for anything declarative. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
